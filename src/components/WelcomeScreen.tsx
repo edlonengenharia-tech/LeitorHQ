@@ -2,9 +2,12 @@ import { useState } from 'react';
 
 interface WelcomeScreenProps {
   onStart: () => void;
+  onOpenFile?: () => void;
+  onOpenFolder?: () => void;
+  isElectron?: boolean;
 }
 
-export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onStart, onOpenFile, onOpenFolder, isElectron }: WelcomeScreenProps) {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDrop = (e: React.DragEvent) => {
@@ -90,15 +93,37 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         </div>
 
         {/* Start button */}
-        <button
-          onClick={onStart}
-          className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/20 mb-4"
-        >
-          <i className="fas fa-play mr-2"></i> Start Reading
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+          {isElectron ? (
+            <>
+              <button
+                onClick={onOpenFile}
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/20"
+              >
+                <i className="fas fa-file-archive mr-2"></i> Open Comic
+              </button>
+              <button
+                onClick={onOpenFolder}
+                className="px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 rounded-xl text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-green-500/20"
+              >
+                <i className="fas fa-folder-open mr-2"></i> Open Folder
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onStart}
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/20"
+            >
+              <i className="fas fa-play mr-2"></i> Start Reading Demo
+            </button>
+          )}
+        </div>
 
         <p className="text-white/30 text-sm">
-          or drop a folder, archive (.cbz, .cbr), or PDF here
+          {isElectron
+            ? 'or drop a folder, archive (.cbz, .cbr), or PDF here'
+            : 'Running in browser mode. Drop files or use the demo comic.'
+          }
         </p>
 
         {/* Supported formats */}
