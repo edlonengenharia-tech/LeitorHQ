@@ -7,10 +7,12 @@ import WelcomeScreen from './components/WelcomeScreen';
 import ViewingHistory, { HistoryEntry } from './components/ViewingHistory';
 import { ComicPage, Panel, ReadingMode, FitMode, AppSettings } from './types';
 import { sampleComic, generatePanels } from './data/sampleComic';
+import { useElectron } from './hooks/useElectron';
 
 function App() {
+  const { isElectron, onComicLoaded, onNavigate, onShowHelp } = useElectron();
   const [showWelcome, setShowWelcome] = useState(true);
-  const [comic] = useState<ComicPage[]>(sampleComic);
+  const [comic, setComic] = useState<ComicPage[]>(sampleComic);
   const [currentPage, setCurrentPage] = useState(0);
   const [currentPanel, setCurrentPanel] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -221,6 +223,50 @@ function App() {
     });
   }, [currentPage, currentPanel, comic]);
 
+  // Electron integration
+  useEffect(() => {
+    if (isElectron) {
+      // Listen for comic loaded from Electron
+      onComicLoaded((data: any) => {
+        if (data && data.pages) {
+          setComic(data.pages);
+          setCurrentPage(0);
+          setCurrentPanel(0);
+          setShowWelcome(false);
+        }
+      });
+
+      // Listen for navigation commands from Electron menu
+      onNavigate((direction: string) => {
+        switch (direction) {
+          case 'next':
+            goNext();
+            break;
+          case 'prev':
+            goPrev();
+            break;
+          case 'nextPage':
+            if (currentPage < comic.length - 1) {
+              setCurrentPage(prev => prev + 1);
+              setCurrentPanel(0);
+            }
+            break;
+          case 'prevPage':
+            if (currentPage > 0) {
+              setCurrentPage(prev => prev - 1);
+              setCurrentPanel(0);
+            }
+            break;
+        }
+      });
+
+      // Listen for help command from Electron menu
+      onShowHelp(() => {
+        setShowHelp(true);
+      });
+    }
+  }, [isElectron, onComicLoaded, onNavigate, onShowHelp]);
+
   const goNext = () => {
     if (currentPanel < totalPanels - 1) {
       setCurrentPanel(prev => prev + 1);
@@ -285,8 +331,17 @@ function App() {
     }
   };
 
+  const { openFileDialog, openFolderDialog } = useElectron();
+
   if (showWelcome) {
-    return <WelcomeScreen onStart={() => setShowWelcome(false)} />;
+    return (
+      <WelcomeScreen
+        onStart={() => setShowWelcome(false)}
+        onOpenFile={openFileDialog}
+        onOpenFolder={openFolderDialog}
+        isElectron={isElectron}
+      />
+    );
   }
 
   return (
